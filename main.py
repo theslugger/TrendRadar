@@ -17,11 +17,15 @@ CONFIG = {
     "FEISHU_SEPARATOR": "━━━━━━━━━━━━━━━━━━━",  # 飞书消息分割线，注意，其它类型的分割线可能会被飞书过滤而不显示
     "REQUEST_INTERVAL": 1000,  # 请求间隔(毫秒)
     "FEISHU_REPORT_TYPE": "daily",  # 飞书报告类型: "current"|"daily"|"both"
+    "TELEGRAM_REPORT_TYPE": "daily",  # Telegram报告类型: "current"|"daily"|"both"
     "RANK_THRESHOLD": 5,  # 排名高亮阈值
     "USE_PROXY": True,  # 是否启用代理
     "DEFAULT_PROXY": "http://127.0.0.1:10086",
     "CONTINUE_WITHOUT_FEISHU": True,  # 控制在没有飞书 webhook URL 时是否继续执行爬虫, 如果 True ,会依然进行爬虫行为，并在 github 上持续的生成爬取的新闻数据
+    "CONTINUE_WITHOUT_TELEGRAM": True,  # 控制在没有Telegram Bot配置时是否继续执行爬虫
     "FEISHU_WEBHOOK_URL": "",  # 飞书机器人的 webhook URL，大概长这样：https://www.feishu.cn/flow/api/trigger-webhook/xxxx， 默认为空，推荐通过GitHub Secrets设置
+    "TELEGRAM_BOT_TOKEN": "",  # Telegram Bot Token，通过GitHub Secrets设置
+    "TELEGRAM_CHAT_ID": "",  # Telegram Chat ID，通过GitHub Secrets设置
 }
 
 
@@ -980,6 +984,140 @@ class ReportGenerator:
 
         return text_content
 
+    @staticmethod
+    def send_to_telegram(
+        stats: List[Dict],
+        failed_ids: Optional[List] = None,
+        report_type: str = "单次爬取",
+    ) -> bool:
+        """发送数据到Telegram Bot"""
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", CONFIG["TELEGRAM_BOT_TOKEN"])
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", CONFIG["TELEGRAM_CHAT_ID"])
+
+        if not bot_token or not chat_id:
+            print(f"警告: TELEGRAM_BOT_TOKEN 或 TELEGRAM_CHAT_ID 未设置，跳过Telegram通知")
+            return False
+
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        
+        text_content = ReportGenerator._build_telegram_content(stats, failed_ids, report_type)
+        
+        payload = {
+            "chat_id": chat_id,
+            "text": text_content,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
+        }
+
+        try:
+            response = requests.post(url, json=payload)
+            if response.status_code == 200:
+                print(f"数据发送到Telegram成功 [{report_type}]")
+                return True
+            else:
+                print(f"发送到Telegram失败 [{report_type}]，状态码：{response.status_code}，响应：{response.text}")
+                return False
+        except Exception as e:
+            print(f"发送到Telegram时出错 [{report_type}]：{e}")
+            return False
+
+    @staticmethod
+    def _build_telegram_content(stats: List[Dict], failed_ids: Optional[List] = None, report_type: str = "单次爬取") -> str:
+        """构建Telegram消息内容"""
+        text_content = ""
+        filtered_stats = [stat for stat in stats if stat["count"] > 0]
+
+        # 消息头部
+        text_content += f"📊 *热点词汇统计* - {report_type}\n\n"
+        
+        if not filtered_stats:
+            text_content += "📭 暂无匹配的热点词汇\n\n"
+        else:
+            total_count = len(filtered_stats)
+            
+            for i, stat in enumerate(filtered_stats):
+                word = stat["word"]
+                count = stat["count"]
+
+                # 频次显示
+                if count >= 10:
+                    text_content += f"🔥 *{word}* : *{count}* 条\n"
+                elif count >= 5:
+                    text_content += f"📈 *{word}* : *{count}* 条\n"
+                else:
+                    text_content += f"📌 *{word}* : {count} 条\n"
+
+                # 标题列表（限制显示前5个）
+                displayed_titles = stat["titles"][:5]
+                for j, title_data in enumerate(displayed_titles, 1):
+                    title = title_data["title"]
+                    source_alias = title_data["source_alias"]
+                    time_display = title_data["time_display"]
+                    count_info = title_data["count"]
+                    ranks = title_data["ranks"]
+                    rank_threshold = title_data["rank_threshold"]
+                    url = title_data.get("url", "")
+                    mobile_url = title_data.get("mobileUrl", "")
+
+                    # 格式化排名
+                    rank_display = ""
+                    if ranks:
+                        min_rank = min(ranks)
+                        max_rank = max(ranks)
+                        if min_rank <= rank_threshold:
+                            if min_rank == max_rank:
+                                rank_display = f" \\[*{min_rank}*\\]"
+                            else:
+                                rank_display = f" \\[*{min_rank}-{max_rank}*\\]"
+                        else:
+                            if min_rank == max_rank:
+                                rank_display = f" \\[{min_rank}\\]"
+                            else:
+                                rank_display = f" \\[{min_rank}-{max_rank}\\]"
+
+                    # 链接处理
+                    link_url = mobile_url or url
+                    if link_url:
+                        # Telegram支持Markdown链接格式
+                        formatted_title = f"[{title}]({link_url})"
+                    else:
+                        formatted_title = title
+
+                    text_content += f"  {j}\\. _{source_alias}_ {formatted_title}"
+                    
+                    if rank_display:
+                        text_content += f"{rank_display}"
+                    if time_display:
+                        text_content += f" _{time_display}_"
+                    if count_info > 1:
+                        text_content += f" ({count_info}次)"
+                    text_content += "\n"
+
+                # 如果还有更多标题未显示
+                if len(stat["titles"]) > 5:
+                    text_content += f"  ... 还有 {len(stat['titles']) - 5} 条相关新闻\n"
+
+                # 分割线
+                if i < len(filtered_stats) - 1:
+                    text_content += "\n━━━━━━━━━━━━━━━━━━━\n\n"
+
+        # 失败平台信息
+        if failed_ids and len(failed_ids) > 0:
+            text_content += "\n━━━━━━━━━━━━━━━━━━━\n\n"
+            text_content += "⚠️ *数据获取失败的平台：*\n"
+            for id_value in failed_ids:
+                text_content += f"  • {id_value}\n"
+
+        # 时间戳
+        now = TimeHelper.get_beijing_time()
+        text_content += f"\n_更新时间：{now.strftime('%Y-%m-%d %H:%M:%S')}_"
+
+        # Telegram消息长度限制为4096字符，如果超长则截断
+        if len(text_content) > 4000:
+            text_content = text_content[:4000] + "\n\n... (内容过长，已截断)"
+
+        return text_content
+
 
 class NewsAnalyzer:
     """新闻分析器"""
@@ -988,11 +1126,13 @@ class NewsAnalyzer:
         self,
         request_interval: int = CONFIG["REQUEST_INTERVAL"],
         feishu_report_type: str = CONFIG["FEISHU_REPORT_TYPE"],
+        telegram_report_type: str = CONFIG["TELEGRAM_REPORT_TYPE"],
         rank_threshold: int = CONFIG["RANK_THRESHOLD"],
     ):
         """初始化分析器"""
         self.request_interval = request_interval
         self.feishu_report_type = feishu_report_type
+        self.telegram_report_type = telegram_report_type
         self.rank_threshold = rank_threshold
 
         self.is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
@@ -1036,6 +1176,9 @@ class NewsAnalyzer:
 
         if self.feishu_report_type in ["daily", "both"]:
             ReportGenerator.send_to_feishu(stats, [], "当日汇总")
+        
+        if self.telegram_report_type in ["daily", "both"]:
+            ReportGenerator.send_to_telegram(stats, [], "当日汇总")
 
         return html_file
 
@@ -1045,14 +1188,25 @@ class NewsAnalyzer:
         print(f"当前北京时间: {now.strftime('%Y-%m-%d %H:%M:%S')}")
 
         webhook_url = os.environ.get("FEISHU_WEBHOOK_URL", CONFIG["FEISHU_WEBHOOK_URL"])
+        telegram_bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", CONFIG["TELEGRAM_BOT_TOKEN"])
+        telegram_chat_id = os.environ.get("TELEGRAM_CHAT_ID", CONFIG["TELEGRAM_CHAT_ID"])
+        
         if not webhook_url and not CONFIG["CONTINUE_WITHOUT_FEISHU"]:
             print("错误: FEISHU_WEBHOOK_URL未设置且CONTINUE_WITHOUT_FEISHU为False，程序退出")
             return
 
+        if not (telegram_bot_token and telegram_chat_id) and not CONFIG["CONTINUE_WITHOUT_TELEGRAM"]:
+            print("错误: TELEGRAM_BOT_TOKEN或TELEGRAM_CHAT_ID未设置且CONTINUE_WITHOUT_TELEGRAM为False，程序退出")
+            return
+
         if not webhook_url:
             print("警告: FEISHU_WEBHOOK_URL未设置，将继续执行爬虫但不发送飞书通知")
+        
+        if not (telegram_bot_token and telegram_chat_id):
+            print("警告: Telegram Bot配置未设置，将继续执行爬虫但不发送Telegram通知")
 
         print(f"飞书报告类型: {self.feishu_report_type}")
+        print(f"Telegram报告类型: {self.telegram_report_type}")
         print(f"排名阈值: {self.rank_threshold}")
 
         # 爬取目标列表
@@ -1116,6 +1270,9 @@ class NewsAnalyzer:
         # 发送报告
         if self.feishu_report_type in ["current", "both"]:
             ReportGenerator.send_to_feishu(stats, failed_ids, "单次爬取")
+        
+        if self.telegram_report_type in ["current", "both"]:
+            ReportGenerator.send_to_telegram(stats, failed_ids, "单次爬取")
 
         html_file = ReportGenerator.generate_html_report(stats, total_titles, failed_ids)
         print(f"HTML报告已生成: {html_file}")
