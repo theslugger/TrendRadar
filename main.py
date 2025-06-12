@@ -1022,25 +1022,13 @@ class ReportGenerator:
             return False
 
     @staticmethod
-    def _escape_markdown(text: str) -> str:
-        """转义Markdown特殊字符"""
-        if not text:
-            return ""
-        # 转义Markdown V2特殊字符
-        chars_to_escape = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
-        for char in chars_to_escape:
-            text = text.replace(char, f'\\{char}')
-        return text
-
-    @staticmethod
     def _build_telegram_content(stats: List[Dict], failed_ids: Optional[List] = None, report_type: str = "单次爬取") -> str:
         """构建Telegram消息内容"""
         text_content = ""
         filtered_stats = [stat for stat in stats if stat["count"] > 0]
 
-        # 消息头部
-        escaped_report_type = ReportGenerator._escape_markdown(report_type)
-        text_content += f"📊 *热点词汇统计* \\- {escaped_report_type}\n\n"
+        # 消息头部 - 使用简单格式
+        text_content += f"📊 *热点词汇统计* - {report_type}\n\n"
         
         if not filtered_stats:
             text_content += "📭 暂无匹配的热点词汇\n\n"
@@ -1049,19 +1037,16 @@ class ReportGenerator:
                 word = stat["word"]
                 count = stat["count"]
 
-                # 转义关键词
-                escaped_word = ReportGenerator._escape_markdown(word)
-
-                # 频次显示
+                # 频次显示 - 简化格式
                 if count >= 10:
-                    text_content += f"🔥 *{escaped_word}* : *{count}* 条\n"
+                    text_content += f"🔥 *{word}* : {count} 条\n"
                 elif count >= 5:
-                    text_content += f"📈 *{escaped_word}* : *{count}* 条\n"
+                    text_content += f"📈 *{word}* : {count} 条\n"
                 else:
-                    text_content += f"📌 *{escaped_word}* : {count} 条\n"
+                    text_content += f"📌 *{word}* : {count} 条\n"
 
-                # 标题列表（限制显示前3个，避免消息过长）
-                displayed_titles = stat["titles"][:3]
+                # 标题列表（限制显示前2个，进一步减少长度）
+                displayed_titles = stat["titles"][:2]
                 for j, title_data in enumerate(displayed_titles, 1):
                     title = title_data["title"]
                     source_alias = title_data["source_alias"]
@@ -1069,71 +1054,100 @@ class ReportGenerator:
                     count_info = title_data["count"]
                     ranks = title_data["ranks"]
                     rank_threshold = title_data["rank_threshold"]
-                    url = title_data.get("url", "")
-                    mobile_url = title_data.get("mobileUrl", "")
 
-                    # 转义标题和来源
-                    escaped_title = ReportGenerator._escape_markdown(title)
-                    escaped_source = ReportGenerator._escape_markdown(source_alias)
-                    escaped_time = ReportGenerator._escape_markdown(time_display) if time_display else ""
+                    # 截断过长的标题
+                    if len(title) > 50:
+                        title = title[:50] + "..."
 
-                    # 格式化排名
+                    # 简化排名显示
                     rank_display = ""
                     if ranks:
                         min_rank = min(ranks)
                         max_rank = max(ranks)
                         if min_rank <= rank_threshold:
                             if min_rank == max_rank:
-                                rank_display = f" \\[*{min_rank}*\\]"
+                                rank_display = f"[*{min_rank}*]"
                             else:
-                                rank_display = f" \\[*{min_rank}\\-{max_rank}*\\]"
+                                rank_display = f"[*{min_rank}-{max_rank}*]"
                         else:
                             if min_rank == max_rank:
-                                rank_display = f" \\[{min_rank}\\]"
+                                rank_display = f"[{min_rank}]"
                             else:
-                                rank_display = f" \\[{min_rank}\\-{max_rank}\\]"
+                                rank_display = f"[{min_rank}-{max_rank}]"
 
-                    # 链接处理
-                    link_url = mobile_url or url
-                    if link_url and len(link_url) < 200:  # 避免过长的URL
-                        # 使用简单的链接格式，避免复杂的Markdown
-                        text_content += f"  {j}\\. _{escaped_source}_ {escaped_title}"
-                        text_content += f"\n     链接: {link_url}"
-                    else:
-                        text_content += f"  {j}\\. _{escaped_source}_ {escaped_title}"
-                    
+                    # 简化时间显示
+                    time_info = ""
+                    if time_display:
+                        time_info = f" ({time_display})"
+
+                    # 次数信息
+                    count_suffix = ""
+                    if count_info > 1:
+                        count_suffix = f" x{count_info}"
+
+                    text_content += f"  {j}. {source_alias} {title}"
                     if rank_display:
                         text_content += f" {rank_display}"
-                    if escaped_time:
-                        text_content += f" _{escaped_time}_"
-                    if count_info > 1:
-                        text_content += f" \\({count_info}次\\)"
+                    if time_info:
+                        text_content += time_info
+                    if count_suffix:
+                        text_content += count_suffix
                     text_content += "\n"
 
                 # 如果还有更多标题未显示
-                if len(stat["titles"]) > 3:
-                    text_content += f"  \\.\\.\\. 还有 {len(stat['titles']) - 3} 条相关新闻\n"
+                if len(stat["titles"]) > 2:
+                    text_content += f"  ... 还有 {len(stat['titles']) - 2} 条相关新闻\n"
 
                 # 分割线
                 if i < len(filtered_stats) - 1:
-                    text_content += "\n━━━━━━━━━━━━━━━━━━━\n\n"
+                    text_content += "\n" + "━" * 20 + "\n\n"
 
         # 失败平台信息
         if failed_ids and len(failed_ids) > 0:
-            text_content += "\n━━━━━━━━━━━━━━━━━━━\n\n"
-            text_content += "⚠️ *数据获取失败的平台：*\n"
+            text_content += "\n" + "━" * 20 + "\n\n"
+            text_content += "⚠️ *数据获取失败的平台:*\n"
             for id_value in failed_ids:
-                escaped_id = ReportGenerator._escape_markdown(id_value)
-                text_content += f"  • {escaped_id}\n"
+                text_content += f"  • {id_value}\n"
 
         # 时间戳
         now = TimeHelper.get_beijing_time()
-        timestamp = ReportGenerator._escape_markdown(now.strftime('%Y-%m-%d %H:%M:%S'))
-        text_content += f"\n_更新时间：{timestamp}_"
+        text_content += f"\n_更新时间: {now.strftime('%Y-%m-%d %H:%M:%S')}_"
 
-        # Telegram消息长度限制为4096字符，如果超长则截断
-        if len(text_content) > 3500:  # 保留一些缓冲空间
-            text_content = text_content[:3500] + "\n\n\\.\\.\\. \\(内容过长，已截断\\)"
+        # Telegram消息长度限制，如果超长则截断到前几个关键词
+        if len(text_content) > 3800:
+            # 重新构建，只保留前3个关键词
+            text_content = f"📊 *热点词汇统计* - {report_type}\n\n"
+            for i, stat in enumerate(filtered_stats[:3]):
+                word = stat["word"]
+                count = stat["count"]
+                
+                if count >= 10:
+                    text_content += f"🔥 *{word}* : {count} 条\n"
+                elif count >= 5:
+                    text_content += f"📈 *{word}* : {count} 条\n"
+                else:
+                    text_content += f"📌 *{word}* : {count} 条\n"
+                
+                # 只显示第一条新闻
+                if stat["titles"]:
+                    title_data = stat["titles"][0]
+                    title = title_data["title"]
+                    source_alias = title_data["source_alias"]
+                    
+                    if len(title) > 40:
+                        title = title[:40] + "..."
+                    
+                    text_content += f"  1. {source_alias} {title}\n"
+                    if len(stat["titles"]) > 1:
+                        text_content += f"  ... 还有 {len(stat['titles']) - 1} 条相关新闻\n"
+                
+                if i < 2:
+                    text_content += "\n" + "━" * 15 + "\n\n"
+            
+            if len(filtered_stats) > 3:
+                text_content += f"\n... 还有 {len(filtered_stats) - 3} 个热点关键词"
+            
+            text_content += f"\n\n_更新时间: {now.strftime('%Y-%m-%d %H:%M:%S')}_"
 
         return text_content
 
