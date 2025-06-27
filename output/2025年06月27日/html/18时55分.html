@@ -1,0 +1,268 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>频率词统计报告</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1, h2 { color: #333; }
+                table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .word { font-weight: bold; }
+                .count { text-align: center; }
+                .percentage { text-align: center; }
+                .titles { max-width: 500px; }
+                .source { color: #666; font-style: italic; }
+                .error { color: #d9534f; }
+                .news-link { 
+                    color: #007bff; 
+                    text-decoration: none; 
+                    border-bottom: 1px dotted #007bff;
+                }
+                .news-link:hover { 
+                    color: #0056b3; 
+                    text-decoration: underline; 
+                }
+                .news-link:visited { 
+                    color: #6f42c1; 
+                }
+                .no-link { 
+                    color: #333; 
+                }
+            </style>
+        </head>
+        <body>
+            <h1>频率词统计报告</h1>
+        <p>总标题数: 255</p><p>生成时间: 2025-06-27 18:55:50</p>
+            <table>
+                <tr>
+                    <th>排名</th>
+                    <th>频率词</th>
+                    <th>出现次数</th>
+                    <th>占比</th>
+                    <th>相关标题</th>
+                </tr>
+        
+                <tr>
+                    <td>1</td>
+                    <td class="word">ai 人工智能</td>
+                    <td class="count">2</td>
+                    <td class="percentage">0.78%</td>
+                    <td class="titles">[百度热搜] <a href="https://www.baidu.com/s?wd=%E5%B0%8F%E7%B1%B3AI%E7%9C%BC%E9%95%9C%E4%B8%8A%E8%84%B8%E8%AF%84%E6%B5%8B" target="_blank" class="news-link">小米AI眼镜上脸评测</a> [17] <font color='grey'>- 18时55分</font><br>[华尔街见闻] <a href="https://wallstreetcn.com/articles/3749906" target="_blank" class="news-link">一文看懂小米发布会：YU 7标准版25.35万元、AI眼镜定价1999起、将在辅助驾驶领域持续投入，下半年升级小米XLA大模型</a> <font color='red'><strong>[1]</strong></font> <font color='grey'>- 18时55分</font></td>
+                </tr>
+            
+                <tr>
+                    <td>2</td>
+                    <td class="word">DeepSeek 梁文锋</td>
+                    <td class="count">1</td>
+                    <td class="percentage">0.39%</td>
+                    <td class="titles">[财联社热门] <a href="https://www.cls.cn/detail/2069804" target="_blank" class="news-link">年中盘点|DeepSeek开启AI平权，人形机器人重塑具身智能，LABUBU引领新消费热潮......一文看懂2025年上半年A股热炒题材</a> [11] <font color='grey'>- 18时55分</font></td>
+                </tr>
+            
+                <tr>
+                    <td>3</td>
+                    <td class="word">京东 刘强东</td>
+                    <td class="count">1</td>
+                    <td class="percentage">0.39%</td>
+                    <td class="titles">[zhihu] <a href="https://www.zhihu.com/question/1921864916538726011" target="_blank" class="news-link">「京东外卖」小范围测试骑手帮扔垃圾服务，每单平台补贴骑手 0.5 元，你会选择让骑手帮扔垃圾吗？</a> [6] <font color='grey'>- 18时55分</font></td>
+                </tr>
+            
+                <tr>
+                    <td>4</td>
+                    <td class="word">马斯克 特斯拉</td>
+                    <td class="count">1</td>
+                    <td class="percentage">0.39%</td>
+                    <td class="titles">[财联社热门] <a href="https://www.cls.cn/detail/2069435" target="_blank" class="news-link">实探特斯拉上海储能超级工厂：已实现超95%国产化率 在中国大陆首个电网侧储能电站项目一期拟年内建成|一线</a> <font color='red'><strong>[5]</strong></font> <font color='grey'>- 18时55分</font></td>
+                </tr>
+            
+                <tr>
+                    <td>5</td>
+                    <td class="word">黄仁勋 英伟达 NVIDIA</td>
+                    <td class="count">1</td>
+                    <td class="percentage">0.39%</td>
+                    <td class="titles">[华尔街见闻] <a href="https://wallstreetcn.com/articles/3749889" target="_blank" class="news-link">标普、纳指收近历史高位，英伟达续创新高，小米一度涨近12%，美元跌至三年来最低</a> <font color='red'><strong>[2]</strong></font> <font color='grey'>- 18时55分</font></td>
+                </tr>
+            
+                <tr>
+                    <td>6</td>
+                    <td class="word">科技</td>
+                    <td class="count">1</td>
+                    <td class="percentage">0.39%</td>
+                    <td class="titles">[财联社热门] <a href="https://www.cls.cn/detail/2069441" target="_blank" class="news-link">比特币要与科技巨头比肩？对冲基金大佬：五年内总市值将飙至5万亿美元！</a> [9] <font color='grey'>- 18时55分</font></td>
+                </tr>
+            
+                <tr>
+                    <td>7</td>
+                    <td class="word">胖东来 于东来</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>8</td>
+                    <td class="word">华为 任正非 鸿蒙 HarmonyOS</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>9</td>
+                    <td class="word">比亚迪 王传福</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>10</td>
+                    <td class="word">宇树 王兴兴</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>11</td>
+                    <td class="word">稚晖君 智元</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>12</td>
+                    <td class="word">黑神话 冯骥</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>13</td>
+                    <td class="word">哪吒 饺子</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>14</td>
+                    <td class="word">流浪地球 郭帆 三体 刘慈欣</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>15</td>
+                    <td class="word">米哈游 原神 星穹铁道</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>16</td>
+                    <td class="word">字节 张一鸣</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>17</td>
+                    <td class="word">微软 Microsoft</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>18</td>
+                    <td class="word">AMD</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>19</td>
+                    <td class="word">谷歌 google gemini deepmind</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>20</td>
+                    <td class="word">chatgpt openai</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>21</td>
+                    <td class="word">claude Anthropic</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>22</td>
+                    <td class="word">iphone ipad mac ios</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>23</td>
+                    <td class="word">汽车 自动驾驶 l3</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>24</td>
+                    <td class="word">机器人</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>25</td>
+                    <td class="word">芯片 半导体 光刻机</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>26</td>
+                    <td class="word">核能</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+                <tr>
+                    <td>27</td>
+                    <td class="word">月球 登月 火星 宇宙 飞船</td>
+                    <td class="count">0</td>
+                    <td class="percentage">0.0%</td>
+                    <td class="titles"></td>
+                </tr>
+            
+            </table>
+        </body>
+        </html>
+        
